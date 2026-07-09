@@ -1,0 +1,66 @@
+<idea-plugin>
+    <id>io.genai.php</id>
+    <name>GenAI PHP Portable</name>
+    <version>0.1.0</version>
+    <vendor url="https://genai.io.vn/" email="contact@genai.io.vn">GenAI</vendor>
+
+    <description><![CDATA[
+        <p><b>Write &amp; run PHP code in IntelliJ IDEA Community for free.</b> PHP Portable
+        is a lightweight, feature-rich way to add PHP support to the free IDE — no PhpStorm
+        license and no system-wide PHP install required.</p>
+        Minimal PHP support for IntelliJ IDEA Community (which does not bundle the
+        paid PhpStorm language plugin):
+        <ul>
+          <li><b>Portable PHP SDK</b> — download a portable PHP interpreter from
+              inside the IDE (like the JDK downloader); no system install required.</li>
+          <li><b>Run PHP script</b> — a run configuration that executes a .php file
+              with the selected PHP SDK or an explicit interpreter path.</li>
+          <li><b>Syntax highlighting</b> — lightweight, lexer-based highlighting for
+              .php files (tags, keywords, strings, comments, variables, numbers).</li>
+        </ul>
+        This is an MVP; semantic features (completion, go-to-def, inspections) are a
+        later step, best delivered by wrapping a PHP language server via LSP4IJ.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.lang</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- 1. Portable PHP interpreter type (managed via our own UI, not the SDK combos) -->
+        <sdkType implementation="io.genai.php.sdk.PhpSdkType"/>
+
+        <!-- 3. File type + syntax highlighting -->
+        <fileType
+            name="PHP File"
+            language="PHP"
+            implementationClass="io.genai.php.lang.PhpFileType"
+            fieldName="INSTANCE"
+            extensions="php;phtml;php5;php7;php8;inc"/>
+        <lang.syntaxHighlighterFactory
+            language="PHP"
+            implementationClass="io.genai.php.lang.PhpSyntaxHighlighterFactory"/>
+
+        <!-- 2. Run a PHP script -->
+        <configurationType
+            implementation="io.genai.php.run.PhpRunConfigurationType"/>
+        <!-- Right-click ▸ Run and gutter ▶ marker on .php files -->
+        <runConfigurationProducer
+            implementation="io.genai.php.run.PhpRunConfigurationProducer"/>
+
+        <!-- Manage portable PHP interpreters: Settings ▸ Languages & Frameworks ▸ PHP Interpreters -->
+        <applicationConfigurable
+            parentId="language"
+            id="io.genai.php.interpreters"
+            displayName="PHP Interpreters"
+            instance="io.genai.php.settings.PhpInterpretersConfigurable"/>
+
+        <!-- Banner on .php files when no PHP interpreter is configured yet -->
+        <editorNotificationProvider
+            implementation="io.genai.php.notify.PhpSetupNotificationProvider"/>
+
+        <!-- Status-bar PHP version switcher -->
+        <statusBarWidgetFactory
+            id="PhpPortable.VersionWidget"
+            implementation="io.genai.php.statusbar.PhpStatusBarWidgetFactory"/>
+    </extensions>
+</idea-plugin>

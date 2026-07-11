@@ -9,6 +9,7 @@ import com.intellij.openapi.util.Ref
 import com.intellij.openapi.util.io.FileUtil
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.psi.PsiElement
+import io.genai.php.lang.PhpFiles
 
 /**
  * Makes a `.php` file runnable directly: right-click ▸ Run, and a gutter ▶ marker.
@@ -46,10 +47,6 @@ class PhpRunConfigurationProducer : LazyRunConfigurationProducer<PhpRunConfigura
         val vf = CommonDataKeys.VIRTUAL_FILE.getData(context.dataContext)
             ?: context.psiLocation?.containingFile?.virtualFile
         if (vf == null || vf.isDirectory) return null
-        return if (vf.extension?.lowercase() in PHP_EXTENSIONS) vf else null
-    }
-
-    companion object {
-        private val PHP_EXTENSIONS = setOf("php", "phtml", "php5", "php7", "php8", "inc")
+        return if (vf.extension?.lowercase() in PhpFiles.EXTENSIONS) vf else null
     }
 }

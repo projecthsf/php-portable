@@ -12,7 +12,7 @@ import javax.swing.Icon
 
 /**
  * The "PHP" SDK type. Downloading/switching PHP is handled by our own UI (the status-bar
- * switcher and Settings ▸ PHP Interpreters), so we keep this type out of the platform's
+ * switcher and Settings ▸ Portable PHP), so we keep this type out of the platform's
  * Java-oriented SDK combos: `allowCreationByUser() = false` removes both the "Add" and
  * "Download" actions there (the platform builds both from the same creatable-types list).
  */

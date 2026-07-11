@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>io.genai.php</id>
     <name>GenAI PHP Portable</name>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <vendor url="https://genai.io.vn/" email="contact@genai.io.vn">GenAI</vendor>
 
     <description><![CDATA[
@@ -22,6 +22,26 @@
         later step, best delivered by wrapping a PHP language server via LSP4IJ.
     ]]></description>
 
+    <change-notes><![CDATA[
+        <b>0.1.1</b>
+        <ul>
+          <li><b>Works alongside PhpStorm &amp; IDEA Ultimate.</b> No longer clashes with the
+              bundled PHP plugin: the editor language support quietly steps aside where PHP is
+              already supported, while the portable interpreter, run action, and setup tools
+              keep working in every IDE.</li>
+          <li><b>Batteries-included PHP.</b> Downloaded interpreters now bundle ~65 extensions
+              (intl, gd, soap, curl, zip, sodium, mbstring, and more), so
+              <code>composer install</code> and real-world projects run without hitting a
+              missing-extension error.</li>
+          <li><b>Clearer run action.</b> The run configuration is now named
+              <b>"PHP Script (Portable)"</b> so it's easy to tell apart from PhpStorm's
+              built-in "PHP Script".</li>
+          <li><b>Clearer settings.</b> The interpreter settings page is now
+              <b>Settings ▸ Languages &amp; Frameworks ▸ Portable PHP</b>, so it no longer
+              looks like a duplicate of PhpStorm's own PHP settings.</li>
+        </ul>
+    ]]></change-notes>
+
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.lang</depends>
 
@@ -29,16 +49,23 @@
         <!-- 1. Portable PHP interpreter type (managed via our own UI, not the SDK combos) -->
         <sdkType implementation="io.genai.php.sdk.PhpSdkType"/>
 
-        <!-- 3. File type + syntax highlighting -->
+        <!-- 3. File type + syntax highlighting.
+             NOTE: no `extensions=` here on purpose. We must NOT statically claim .php, or we
+             would clash with the official PHP plugin on PhpStorm / IDEA Ultimate. Instead the
+             .php* extensions are bound at runtime, and only where no official PHP support
+             exists (IDEA Community) — see io.genai.php.lang.PhpLanguageActivation.
+             The language id is "PhpPortable" (unique) rather than "PHP" for the same reason. -->
         <fileType
             name="PHP File"
-            language="PHP"
+            language="PhpPortable"
             implementationClass="io.genai.php.lang.PhpFileType"
-            fieldName="INSTANCE"
-            extensions="php;phtml;php5;php7;php8;inc"/>
+            fieldName="INSTANCE"/>
         <lang.syntaxHighlighterFactory
-            language="PHP"
+            language="PhpPortable"
             implementationClass="io.genai.php.lang.PhpSyntaxHighlighterFactory"/>
+
+        <!-- Bind .php* to our file type at startup, Community-only (see class docs). -->
+        <postStartupActivity implementation="io.genai.php.lang.PhpLanguageActivation"/>
 
         <!-- 2. Run a PHP script -->
         <configurationType
@@ -47,11 +74,11 @@
         <runConfigurationProducer
             implementation="io.genai.php.run.PhpRunConfigurationProducer"/>
 
-        <!-- Manage portable PHP interpreters: Settings ▸ Languages & Frameworks ▸ PHP Interpreters -->
+        <!-- Manage portable PHP interpreters: Settings ▸ Languages & Frameworks ▸ Portable PHP -->
         <applicationConfigurable
             parentId="language"
             id="io.genai.php.interpreters"
-            displayName="PHP Interpreters"
+            displayName="Portable PHP"
             instance="io.genai.php.settings.PhpInterpretersConfigurable"/>
 
         <!-- Banner on .php files when no PHP interpreter is configured yet -->

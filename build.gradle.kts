@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "io.genai"
-version = "0.1.0"
+version = "0.1.1"
 
 repositories {
     mavenCentral()
@@ -37,6 +37,12 @@ intellijPlatform {
             sinceBuild = "233"
             untilBuild = provider { null }
         }
+    }
+
+    // `./gradlew publishPlugin` reads the JetBrains Marketplace token from the PUBLISH_TOKEN
+    // env var (set as a GitHub Actions secret). No signing configured, so uploads are unsigned.
+    publishing {
+        token = providers.environmentVariable("PUBLISH_TOKEN")
     }
 }
 

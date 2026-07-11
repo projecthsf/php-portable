@@ -16,16 +16,18 @@ import javax.swing.DefaultListModel
 import javax.swing.JComponent
 
 /**
- * Settings ▸ Languages & Frameworks ▸ PHP Interpreters — download, add-from-disk,
- * and remove portable PHP interpreters. Changes apply immediately (they mutate the
- * shared SDK table), so there's no Apply/Reset state to track.
+ * Settings ▸ Languages & Frameworks ▸ Portable PHP — download, add-from-disk,
+ * and remove portable PHP interpreters. Named "Portable PHP" (not "PHP Interpreters")
+ * so it doesn't read as a duplicate of PhpStorm's own PHP settings when both are present.
+ * Changes apply immediately (they mutate the shared SDK table), so there's no Apply/Reset
+ * state to track.
  */
 class PhpInterpretersConfigurable : Configurable {
 
     private val model = DefaultListModel<Sdk>()
     private val list = JBList(model)
 
-    override fun getDisplayName(): String = "PHP Interpreters"
+    override fun getDisplayName(): String = "Portable PHP"
 
     override fun createComponent(): JComponent {
         list.cellRenderer = SimpleListCellRenderer.create { label, sdk, _ ->

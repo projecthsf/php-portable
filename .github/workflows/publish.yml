@@ -49,6 +49,14 @@ jobs:
             echo "new=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # Gate: run the JetBrains Plugin Verifier before publishing. Fails the job (and blocks
+      # the publish step below) on internal-API / compatibility / structural problems — the
+      # class of issue that shipped in 0.1.2. Downloads the latest IDEA (~1.5 GB) on release
+      # runs only. failureLevel is configured in build.gradle.kts.
+      - name: Verify plugin (pre-publish gate)
+        if: steps.guard.outputs.new == 'true'
+        run: ./gradlew verifyPlugin --no-daemon --stacktrace
+
       - name: Publish plugin
         if: steps.guard.outputs.new == 'true'
         env:

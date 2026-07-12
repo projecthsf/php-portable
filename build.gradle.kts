@@ -1,4 +1,5 @@
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.intellij.platform.gradle.tasks.VerifyPluginTask.FailureLevel
 
 plugins {
     id("java")
@@ -49,13 +50,23 @@ intellijPlatform {
     }
 
     // `./gradlew verifyPlugin` runs the JetBrains Plugin Verifier (same tool Marketplace uses).
-    // Pinned to one recent IDE to keep downloads bounded; `recommended()` would pull every
-    // major since sinceBuild (233) with no untilBuild cap.
+    // This is a publish gate in CI (see .github/workflows/publish.yml).
     pluginVerification {
+        // Fail only on genuine breakage — including INTERNAL_API_USAGES, the class of problem
+        // that slipped into 0.1.2. Plain deprecated / scheduled-for-removal usages are reported
+        // but do NOT fail the build: two deprecations are unavoidable at sinceBuild 233
+        // (SdkType.suggestHomePath is abstract; getPopupStep can't change without breaking the
+        // floor), and forward-compat churn on the latest IDE shouldn't block a release.
+        failureLevel.set(listOf(
+            FailureLevel.COMPATIBILITY_PROBLEMS,
+            FailureLevel.INTERNAL_API_USAGES,
+            FailureLevel.MISSING_DEPENDENCIES,
+            FailureLevel.INVALID_PLUGIN,
+        ))
         ides {
             // Verify against the newest *released* unified IDEA (IntelliJ IDEA Community is
-            // no longer a separate distribution since 2025.3). One download, and enough to
-            // surface forward-compat deprecations. Bump/pin later if you want a wider matrix.
+            // no longer a separate distribution since 2025.3). One download, enough to catch
+            // forward-compat problems. Bump/pin later if you want a wider matrix.
             latest {
                 types.set(listOf(IntelliJPlatformType.IntellijIdea))
             }

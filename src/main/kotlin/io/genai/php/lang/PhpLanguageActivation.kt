@@ -1,10 +1,9 @@
 package io.genai.php.lang
 
-import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileTypes.ExtensionFileNameMatcher
 import com.intellij.openapi.fileTypes.FileTypeManager
+import com.intellij.openapi.fileTypes.UnknownFileType
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import java.util.concurrent.atomic.AtomicBoolean
@@ -28,8 +27,8 @@ class PhpLanguageActivation : ProjectActivity {
     override suspend fun execute(project: Project) {
         // Association is application-global; do it once per IDE session, not per project.
         if (!activated.compareAndSet(false, true)) return
-        // Where PHP is already supported, do nothing — let the official plugin own .php.
-        if (officialPhpPresent()) return
+        // If .php is already owned (e.g. by the official PHP plugin on PhpStorm), stay dormant.
+        if (phpExtensionAlreadyOwned()) return
 
         val fileTypeManager = FileTypeManager.getInstance()
         ApplicationManager.getApplication().invokeLater {
@@ -41,11 +40,17 @@ class PhpLanguageActivation : ProjectActivity {
         }
     }
 
-    // Uses the public PluginManager facade, not the @ApiStatus.Internal PluginManagerCore.
-    // findEnabledPlugin returns non-null only when the official PHP plugin is present AND
-    // enabled — exactly the case where it owns .php and we must stay dormant.
-    private fun officialPhpPresent(): Boolean =
-        PluginManager.getInstance().findEnabledPlugin(PluginId.getId("com.jetbrains.php")) != null
+    /**
+     * Public, plugin-agnostic check: is `.php` already claimed by some other file type? On
+     * PhpStorm / IDEA Ultimate the official PHP plugin registers it at load — before this
+     * startup activity runs — so we defer to whoever owns it. `UnknownFileType` means nobody
+     * owns it yet (Community); our own [PhpFileType] means we already bound it in a prior
+     * session (re-associating is harmless). Avoids the @ApiStatus.Internal plugin-manager APIs.
+     */
+    private fun phpExtensionAlreadyOwned(): Boolean {
+        val existing = FileTypeManager.getInstance().getFileTypeByExtension("php")
+        return existing != UnknownFileType.INSTANCE && existing != PhpFileType
+    }
 
     companion object {
         private val activated = AtomicBoolean(false)

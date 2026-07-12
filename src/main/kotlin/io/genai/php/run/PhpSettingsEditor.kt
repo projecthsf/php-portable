@@ -5,6 +5,7 @@ import com.intellij.openapi.options.SettingsEditor
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.projectRoots.ProjectJdkTable
 import com.intellij.openapi.ui.ComboBox
+import com.intellij.openapi.ui.TextBrowseFolderListener
 import com.intellij.openapi.ui.TextFieldWithBrowseButton
 import com.intellij.ui.dsl.builder.AlignX
 import com.intellij.ui.dsl.builder.panel
@@ -23,12 +24,18 @@ class PhpSettingsEditor(project: Project) : SettingsEditor<PhpRunConfiguration>(
             sdkCombo.addItem(it.name)
         }
         scriptField.addBrowseFolderListener(
-            "Select PHP Script", null, project,
-            FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor(),
+            TextBrowseFolderListener(
+                FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor()
+                    .withTitle("Select PHP Script"),
+                project,
+            ),
         )
         interpreterField.addBrowseFolderListener(
-            "Select PHP Executable", null, project,
-            FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor(),
+            TextBrowseFolderListener(
+                FileChooserDescriptorFactory.createSingleFileNoJarsDescriptor()
+                    .withTitle("Select PHP Executable"),
+                project,
+            ),
         )
     }
 

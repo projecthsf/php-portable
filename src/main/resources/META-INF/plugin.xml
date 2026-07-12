@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>io.genai.php</id>
     <name>GenAI PHP Portable</name>
-    <version>0.1.2</version>
+    <version>0.1.3</version>
     <vendor url="https://genai.io.vn/" email="contact@genai.io.vn">GenAI</vendor>
 
     <description><![CDATA[
@@ -23,6 +23,12 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <b>0.1.3</b>
+        <ul>
+          <li>Forward compatibility: dropped an internal-only platform API and the
+              platform APIs scheduled for removal in newer IDE builds (verified with the
+              JetBrains Plugin Verifier). No functional changes.</li>
+        </ul>
         <b>0.1.2</b>
         <ul>
           <li>Maintenance: replaced an internal-only platform API with its public

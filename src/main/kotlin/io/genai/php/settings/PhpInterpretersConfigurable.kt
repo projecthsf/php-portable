@@ -4,7 +4,7 @@ import com.intellij.ide.actions.RevealFileAction
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.ui.Messages
-import com.intellij.ui.SimpleListCellRenderer
+import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.dsl.builder.Align
@@ -30,8 +30,16 @@ class PhpInterpretersConfigurable : Configurable {
     override fun getDisplayName(): String = "Portable PHP"
 
     override fun createComponent(): JComponent {
-        list.cellRenderer = SimpleListCellRenderer.create { label, sdk, _ ->
-            label.text = "${sdk.name}   —   ${sdk.homePath ?: "?"}"
+        list.cellRenderer = object : ColoredListCellRenderer<Sdk>() {
+            override fun customizeCellRenderer(
+                list: javax.swing.JList<out Sdk>,
+                sdk: Sdk,
+                index: Int,
+                selected: Boolean,
+                hasFocus: Boolean,
+            ) {
+                append("${sdk.name}   —   ${sdk.homePath ?: "?"}")
+            }
         }
         reload()
 

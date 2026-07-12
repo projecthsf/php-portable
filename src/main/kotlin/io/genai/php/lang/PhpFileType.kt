@@ -9,7 +9,7 @@ import javax.swing.Icon
  * `object` already exposes a static `INSTANCE` field, so no extra declaration needed.
  */
 object PhpFileType : LanguageFileType(PhpLanguage) {
-    private val ICON: Icon = IconLoader.getIcon("/icons/php.svg", PhpFileType::class.java)
+    private val ICON: Icon = IconLoader.getIcon("/icons/php.svg", PhpFileType::class.java.classLoader)
 
     override fun getName(): String = "PHP File"
     override fun getDescription(): String = "PHP source file"

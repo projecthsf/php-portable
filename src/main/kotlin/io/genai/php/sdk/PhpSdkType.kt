@@ -56,7 +56,7 @@ class PhpSdkType : SdkType("PHP Portable") {
     override fun allowCreationByUser(): Boolean = false
 
     companion object {
-        private val ICON: Icon = IconLoader.getIcon("/icons/php.svg", PhpSdkType::class.java)
+        private val ICON: Icon = IconLoader.getIcon("/icons/php.svg", PhpSdkType::class.java.classLoader)
 
         fun getInstance(): PhpSdkType = SdkType.findInstance(PhpSdkType::class.java)
 

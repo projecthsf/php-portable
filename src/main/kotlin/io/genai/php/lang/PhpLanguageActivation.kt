@@ -1,6 +1,6 @@
 package io.genai.php.lang
 
-import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileTypes.ExtensionFileNameMatcher
@@ -41,8 +41,11 @@ class PhpLanguageActivation : ProjectActivity {
         }
     }
 
+    // Uses the public PluginManager facade, not the @ApiStatus.Internal PluginManagerCore.
+    // findEnabledPlugin returns non-null only when the official PHP plugin is present AND
+    // enabled — exactly the case where it owns .php and we must stay dormant.
     private fun officialPhpPresent(): Boolean =
-        PluginManagerCore.getPlugin(PluginId.getId("com.jetbrains.php"))?.isEnabled == true
+        PluginManager.getInstance().findEnabledPlugin(PluginId.getId("com.jetbrains.php")) != null
 
     companion object {
         private val activated = AtomicBoolean(false)

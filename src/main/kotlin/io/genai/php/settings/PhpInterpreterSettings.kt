@@ -20,6 +20,10 @@ class PhpInterpreterSettings : PersistentStateComponent<PhpInterpreterSettings.S
 
     class State {
         var defaultSdkName: String? = null
+        // Code intelligence (LSP/Phpactor completion, navigation, errors). Default ON —
+        // it's the headline feature beyond "run a file"; users can opt out. See the LSP
+        // layer in META-INF/lsp.xml, gated by this flag via PhpClientFeatures.isEnabled.
+        var codeIntelligenceEnabled: Boolean = true
     }
 
     private var myState = State()
@@ -33,6 +37,12 @@ class PhpInterpreterSettings : PersistentStateComponent<PhpInterpreterSettings.S
         get() = myState.defaultSdkName
         set(value) {
             myState.defaultSdkName = value
+        }
+
+    var codeIntelligenceEnabled: Boolean
+        get() = myState.codeIntelligenceEnabled
+        set(value) {
+            myState.codeIntelligenceEnabled = value
         }
 
     /**

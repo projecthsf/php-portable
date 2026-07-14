@@ -1,0 +1,22 @@
+<idea-plugin>
+    <!-- Optional PHP code-intelligence layer. Loaded only when the LSP4IJ plugin is present
+         (declared via <depends optional config-file="lsp.xml"> in plugin.xml). Registers a
+         Phpactor-backed language server with LSP4IJ and maps it to our PhpPortable file type,
+         so it activates only where our file type owns .php (IDEA Community, not PhpStorm). -->
+    <extensions defaultExtensionNs="com.redhat.devtools.lsp4ij">
+        <server
+            id="phpPortable"
+            name="PHP (Portable)"
+            factoryClass="io.genai.php.lsp.PhpLanguageServerFactory">
+            <description><![CDATA[
+                PHP completion, navigation and diagnostics via Phpactor, running on the
+                portable PHP interpreter. Fully local and offline.
+            ]]></description>
+        </server>
+        <!-- languageId MUST be "php": PHP language servers (Intelephense, Phpactor) ignore
+             files whose LSP languageId isn't "php". Our IntelliJ language id is "PhpPortable"
+             (unique, to coexist with the official PHP plugin), so without this override LSP4IJ
+             would send languageId="phpportable" and the server rejects every file. -->
+        <languageMapping language="PhpPortable" serverId="phpPortable" languageId="php"/>
+    </extensions>
+</idea-plugin>

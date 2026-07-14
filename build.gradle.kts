@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "io.genai"
-version = "0.1.3"
+version = "0.2.0"
 
 repositories {
     mavenCentral()
@@ -19,11 +19,16 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        // IntelliJ IDEA Community — PHP support isn't bundled here, which is the
-        // whole point of this plugin.
-        intellijIdeaCommunity("2024.1")
+        // Compile against 2024.2 (242): LSP4IJ requires build 242+, and the optional
+        // semantic-support module compiles against its API. Core sinceBuild stays 233 —
+        // the LSP layer is an OPTIONAL dependency, active only where LSP4IJ can install.
+        intellijIdeaCommunity("2024.2")
         // instrumentationTools() removed in plugin 2.x — code instrumentation deps are
         // now added automatically (intellijPlatform.instrumentCode defaults to true).
+
+        // Optional PHP code-intelligence layer (completion / navigation / errors) via
+        // LSP4IJ + Phpactor. Compile-time dep here; runtime it's optional (see plugin.xml).
+        plugin("com.redhat.devtools.lsp4ij", "0.20.1")
     }
 }
 

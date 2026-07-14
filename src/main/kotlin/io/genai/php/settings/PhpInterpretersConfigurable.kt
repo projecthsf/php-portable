@@ -2,8 +2,13 @@ package io.genai.php.settings
 
 import com.intellij.ide.actions.RevealFileAction
 import com.intellij.openapi.options.Configurable
+import com.intellij.openapi.progress.ProgressManager
+import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.projectRoots.Sdk
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.util.ThrowableComputable
+import io.genai.php.lsp.CodeIntelligenceSetup
+import io.genai.php.lsp.PhpactorManager
 import com.intellij.ui.ColoredListCellRenderer
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
@@ -60,6 +65,23 @@ class PhpInterpretersConfigurable : Configurable {
                 button("Clean Up") { cleanUpAction() }
                 button("Open Folder") { openFolderAction() }
             }
+            separator()
+            row {
+                checkBox("Code intelligence (completion, navigation, errors)")
+                    .applyToComponent {
+                        isSelected = PhpInterpreterSettings.getInstance().codeIntelligenceEnabled
+                        addActionListener {
+                            PhpInterpreterSettings.getInstance().codeIntelligenceEnabled = isSelected
+                        }
+                    }
+                button(if (CodeIntelligenceSetup.isFullySetUp()) "Reinstall Phpactor…" else "Enable Code Intelligence…") {
+                    enableCodeIntelligenceAction()
+                }
+            }.rowComment(
+                "Runs a local PHP language server (Phpactor) on the selected interpreter — " +
+                    "fully offline. Also installs the free <b>LSP4IJ</b> plugin (one click, may " +
+                    "prompt a restart). Restart the server after changing these settings.",
+            )
         }
     }
 
@@ -114,6 +136,44 @@ class PhpInterpretersConfigurable : Configurable {
             "Removed ${result.removed} missing interpreter(s); registered ${result.added} orphaned install(s).",
             "Clean Up PHP Interpreters",
         )
+    }
+
+    /**
+     * One-click enable from Settings: download Phpactor and install the LSP4IJ plugin. Needs a
+     * project for the plugin-install flow; if somehow none is open, fall back to just fetching
+     * Phpactor. When already fully set up, this button is a Phpactor re-download instead.
+     */
+    private fun enableCodeIntelligenceAction() {
+        if (CodeIntelligenceSetup.isFullySetUp()) {
+            downloadPhpactorAction()
+            return
+        }
+        val project = ProjectManager.getInstance().openProjects.firstOrNull()
+        if (project == null) {
+            downloadPhpactorAction()
+            return
+        }
+        CodeIntelligenceSetup.enable(project) {}
+    }
+
+    private fun downloadPhpactorAction() {
+        try {
+            val path = ProgressManager.getInstance().runProcessWithProgressSynchronously(
+                ThrowableComputable { PhpactorManager.download() },
+                "Downloading Phpactor…",
+                true,
+                null,
+            )
+            Messages.showInfoMessage(
+                "Phpactor installed at $path.\nOpen a .php file to start code intelligence.",
+                "Code Intelligence",
+            )
+        } catch (e: Exception) {
+            Messages.showErrorDialog(
+                "Failed to download Phpactor: ${e.message}",
+                "Code Intelligence",
+            )
+        }
     }
 
     private fun openFolderAction() {

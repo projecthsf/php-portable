@@ -1,0 +1,5 @@
+<svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+  <rect x="3" y="3" width="34" height="34" rx="9" fill="none" stroke="#8892BF" stroke-width="2.5"/>
+  <text x="20" y="26" font-family="'JetBrains Mono', Menlo, Consolas, monospace"
+        font-size="15" font-weight="700" fill="#8892BF" text-anchor="middle">php</text>
+</svg>

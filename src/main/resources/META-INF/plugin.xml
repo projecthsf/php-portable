@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>io.genai.php</id>
     <name>GenAI PHP Portable</name>
-    <version>0.2.1</version>
+    <version>0.2.2</version>
     <vendor url="https://genai.io.vn/" email="contact@genai.io.vn">GenAI</vendor>
 
     <description><![CDATA[
@@ -23,6 +23,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <b>0.2.2</b>
+        <ul>
+          <li>Added a plugin icon (shown in the Plugins list and on the Marketplace).</li>
+        </ul>
         <b>0.2.1</b>
         <ul>
           <li>Refreshed the file/SDK icon to a cleaner monospace <b>php</b> mark.</li>

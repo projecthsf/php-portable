@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "io.genai"
-version = "0.2.2"
+version = "0.2.16"
 
 repositories {
     mavenCentral()
@@ -82,3 +82,13 @@ intellijPlatform {
 // Indexing settings via a headless IDE is slow and clashes with a running runIde
 // sandbox ("Only one instance of IDEA can be run at a time"); not needed for a dev build.
 tasks.named("buildSearchableOptions") { enabled = false }
+
+tasks.runIde {
+    // Developer diagnostics: ./gradlew runIde -Pphp.diag
+    // Opens a prepared project and logs PHP navigation diagnostics (logger "php-diag")
+    // to build/idea-sandbox/logs/idea.log. See PhpDiagnosticsActivity.
+    if (providers.gradleProperty("php.diag").isPresent) {
+        args(listOf("/tmp/php-diag-project"))
+        jvmArgs("-Dphp.portable.diagnose=true")
+    }
+}

@@ -27,6 +27,20 @@ object PhpactorManager {
 
     fun isInstalled(): Boolean = Files.isRegularFile(pharPath())
 
+    /**
+     * Replicates Phpactor's project id (FilePathResolverExtension::calculateProjectId):
+     * `<basename(root)>-<md5(root)[:6]>` — used to locate its per-project index directories
+     * under ~/.cache/phpactor/index (see PhpactorConnectionProvider).
+     */
+    fun projectId(projectRoot: String): String {
+        val hash = java.security.MessageDigest.getInstance("MD5")
+            .digest(projectRoot.toByteArray())
+            .joinToString("") { "%02x".format(it) }
+            .take(6)
+        val name = java.io.File(projectRoot).name.ifBlank { "project" }
+        return "$name-$hash"
+    }
+
     /** On-disk copy of phpstorm-stubs (extracted from the phar) so go-to-definition on PHP
      *  built-ins (\DateTime, json_encode, …) lands on real, openable files instead of the
      *  phar-internal path. Pointed at via Phpactor's stub config (see PhpactorConnectionProvider). */

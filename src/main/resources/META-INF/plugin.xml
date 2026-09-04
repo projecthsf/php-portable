@@ -1,7 +1,7 @@
 <idea-plugin>
     <id>io.genai.php</id>
     <name>GenAI PHP Portable</name>
-    <version>0.2.2</version>
+    <version>0.2.16</version>
     <vendor url="https://genai.io.vn/" email="contact@genai.io.vn">GenAI</vendor>
 
     <description><![CDATA[
@@ -23,6 +23,156 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <b>0.2.16</b>
+        <ul>
+          <li><b>File icon now matches current PhpStorm (New UI)</b>: the blue "php" glyph
+              with an automatic dark-theme variant, taken from the platform's New UI icon
+              set. Replaces the old-UI file-sheet icon from 0.2.15.</li>
+        </ul>
+        <b>0.2.15</b>
+        <ul>
+          <li>The <code>.php</code> file icon is now the official PhpStorm PHP file icon
+              (from the JetBrains PHP plugin, Apache 2.0, copyright header preserved), so
+              files look exactly like they do in PhpStorm.</li>
+        </ul>
+        <b>0.2.14</b>
+        <ul>
+          <li>The <code>.php</code> file type no longer sets a custom icon — files render with
+              the IDE's default file icon.</li>
+        </ul>
+        <b>0.2.13</b>
+        <ul>
+          <li><b>Fixed: remaining red tabs/project-tree marks on files using protobuf
+              accessors or env-variant config classes.</b> Those marks come from RAW
+              ERROR-severity diagnostics (Wolf marks), which client-side filtering cannot
+              touch. <code>worse.missing_member</code> — the provider behind both the
+              protobuf <code>__call</code> accessor and the variant-class constant false
+              positives — is now disabled by default at the source. All remaining
+              ERROR-severity diagnostics are gone, so no file gets marked. Set
+              <code>language_server.diagnostic_ignore_codes</code> yourself to re-enable
+              (the plugin's protobuf/variant class filtering then still narrows the noise).</li>
+        </ul>
+        <b>0.2.12</b>
+        <ul>
+          <li><b>No more protobuf false positives and style noise on legacy codebases.</b>
+              <ul>
+                <li>A stub for the runtime-provided <code>\ProtobufMessage</code> base class is
+                    installed with the PHP stubs, so inherited methods
+                    (<code>parseFromString</code>, <code>serializeToString</code>, …) resolve
+                    instead of being reported as missing.</li>
+                <li>Generated protobuf message accessors (<code>getIdKeys</code>, …) are
+                    provided by the runtime's <code>__call</code> magic — the remaining
+                    "Method … does not exist" findings on <code>extends \ProtobufMessage</code>
+                    classes are now suppressed (the class list ships with the generated class
+                    map).</li>
+                <li>Style diagnostics that are pure noise on legacy code —
+                    <code>worse.docblock_missing_param</code>,
+                    <code>worse.docblock_missing_return_type</code>,
+                    <code>worse.missing_return_type</code>,
+                    <code>worse.undefined_variable</code> — are disabled by default via the
+                    maintained Phpactor config. Set
+                    <code>language_server.diagnostic_ignore_codes</code> yourself to
+                    override.</li>
+              </ul></li>
+        </ul>
+        <b>0.2.11</b>
+        <ul>
+          <li><b>Fixed: diagnostics pipeline crashed with LSP4IJ 0.21.0</b> — it bundles
+              lsp4j 1.0.0, where <code>Diagnostic.getMessage()</code> returns
+              <code>Either&lt;String, MarkupContent&gt;</code> instead of <code>String</code>.
+              The plugin's filter (compiled against the older signature) threw
+              <code>NoSuchMethodError</code>, killing LSP4IJ's whole diagnostics pipeline —
+              stale editor marks, tab underlines and project-tree error badges could never be
+              cleared. Message access is now version-proof (reflective) and any failure
+              degrades to "no filtering" instead of breaking the pipeline.</li>
+          <li><b>PHP file icon</b> is now the classic PHP logo (ellipse + php) instead of the
+              custom monospace mark.</li>
+        </ul>
+        <b>0.2.10</b>
+        <ul>
+          <li><b>Fixed: false "Class not found" still marked tabs and the project tree red.</b>
+              Editor and Problems view were clean, but file tabs and the tree kept the red
+              marks — those come from Phpactor's diagnostics pipeline, which runs in a
+              configuration context that never receives the plugin's LSP settings. The plugin
+              now maintains Phpactor's global config file (~/.config/phpactor/phpactor.json)
+              pointing at a STATIC index that only the plugin's offline build writes, while
+              each server session works on its own live copy (a running session rewrites
+              index records and corrupts any index it shares). Diagnostics now resolve
+              project classes correctly at the source: no false findings, no red marks
+              anywhere.</li>
+        </ul>
+        <b>0.2.9</b>
+        <ul>
+          <li><b>Fixed: corrupted index caused recurring "Class not found".</b> The index warm-up
+              ran concurrently with the language server, and Phpactor's on-disk index has no
+              file locking — the two writers overwrote each other's records (classes ended up
+              indexed with an empty file path, which re-broke diagnostics, editor marks and
+              the project tree). The warm-up now completes synchronously before the server
+              process starts, and the index is versioned anew (one clean rebuild).</li>
+        </ul>
+        <b>0.2.8</b>
+        <ul>
+          <li><b>Fixed: false "Class not found" still shown in the editor.</b> LSP4IJ renders
+              editor underlines through a highlighting pass that bypasses the inspection hook
+              used by 0.2.7's filter — the suppression now also hooks
+              <code>createAnnotation</code>, the common funnel of all diagnostic rendering
+              paths.</li>
+        </ul>
+        <b>0.2.7</b>
+        <ul>
+          <li><b>Fixed: mass "Class X not found" false positives on non-Composer projects.</b>
+              Phpactor's diagnostics only resolve classes through a Composer autoloader (its
+              fallback scanner follows no symlinks and requires file name == class name). The
+              plugin now generates a Composer-compatible class map at every server start
+              (~0.5s) and feeds it to Phpactor — plus filters the remaining false "not found"
+              findings for classes that verifiably exist in the project. Real Composer
+              projects are untouched.</li>
+          <li><b>Fixed: the index warm-up was a silent no-op</b> — Phpactor's CLI rejects the
+              nested JSON config format; it now sends flat keys, so the offline index build
+              actually runs.</li>
+        </ul>
+        <b>0.2.6</b>
+        <ul>
+          <li><b>swoole_system / Swoole specialization.</b> The Swoole extension's legacy
+              runtime aliases (<code>swoole_table</code>, <code>swoole_server</code>,
+              <code>Co\*</code>, …) are registered with <code>class_alias()</code> and are
+              invisible to static analysis. The plugin now generates stub declarations for
+              them (one file per namespace, next to the PHP stubs), so go-to-definition,
+              completion and constant resolution work on legacy Swoole code, and the
+              remaining false "Class … not found" diagnostics are filtered client-side for
+              exactly those names.</li>
+        </ul>
+        <b>0.2.5</b>
+        <ul>
+          <li><b>Better protobuf support.</b> Diagnostics are suppressed in generated
+              <code>pb_proto_*.php</code> files (they only produced unfixable style noise), and
+              the index size limit was raised so large generated files stay navigable.</li>
+          <li><b>Framework-ready indexing.</b> The plugin now warms up Phpactor's index once per
+              server start (offline <code>index:build</code>), so framework classes resolve
+              immediately after opening a project instead of waiting for file events.</li>
+        </ul>
+        <b>0.2.4</b>
+        <ul>
+          <li><b>Fixed: Find Usages / "who calls this method" popup did nothing.</b> Clicking a
+              method declaration with Cmd+Click / Ctrl+Click never listed callers and
+              Edit ▸ Find Usages found nothing. Root cause: LSP4IJ's target-element evaluator is
+              registered with an empty language key, so the platform never consults it and a
+              reference-free PSI like ours has no way to resolve the caret target. The plugin now
+              registers its own evaluator for the PHP language, wiring the caret identifier into
+              LSP4IJ's <code>textDocument/references</code> pipeline.</li>
+        </ul>
+        <b>0.2.3</b>
+        <ul>
+          <li><b>Fixed: no completion / wrong "Class not found" errors in symlink-based
+              workspaces.</b> Projects whose root is a container of symlinked checkouts (common
+              with monorepo-style setups) now index correctly — Phpactor's indexer follows
+              symlinks, and the on-disk index is versioned so the broken one is rebuilt once
+              automatically.</li>
+          <li><b>Fixed: editor errors after toggling the LSP4IJ plugin.</b> The PHP language and
+              its token types are now attached to this plugin's main descriptor, so disabling or
+              reloading LSP4IJ no longer breaks highlighting with
+              "Trying to access element type from unloaded plugin" errors.</li>
+        </ul>
         <b>0.2.2</b>
         <ul>
           <li>Added a plugin icon (shown in the Plugins list and on the Marketplace).</li>
@@ -112,6 +262,9 @@
 
         <!-- Bind .php* to our file type at startup, Community-only (see class docs). -->
         <postStartupActivity implementation="io.genai.php.lang.PhpLanguageActivation"/>
+
+        <!-- Developer diagnostics, inert without -Dphp.portable.diagnose=true (see class docs). -->
+        <postStartupActivity implementation="io.genai.php.diag.PhpDiagnosticsActivity"/>
 
         <!-- 2. Run a PHP script -->
         <configurationType

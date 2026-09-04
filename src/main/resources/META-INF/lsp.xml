@@ -19,4 +19,15 @@
              would send languageId="phpportable" and the server rejects every file. -->
         <languageMapping language="PhpPortable" serverId="phpPortable" languageId="php"/>
     </extensions>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <!-- Target-element evaluation for our language: turns the identifier at the caret into
+             an LSPPsiElement so TargetElementUtil (Find Usages, and GotoDeclaration's
+             "click the declaration to see its callers" popup) can resolve a target. LSP4IJ's
+             own evaluator is registered with language="" and therefore never matches any
+             language — see PhpTargetElementEvaluator for details. -->
+        <targetElementEvaluator
+            language="PhpPortable"
+            implementationClass="io.genai.php.lsp.PhpTargetElementEvaluator"/>
+    </extensions>
 </idea-plugin>

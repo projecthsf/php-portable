@@ -55,7 +55,7 @@ intellijPlatform {
     }
 
     // `./gradlew verifyPlugin` runs the JetBrains Plugin Verifier (same tool Marketplace uses).
-    // This is a publish gate in CI (see .github/workflows/publish.yml).
+    // This gate runs on every pull request (ci.yml) and again before publishing (publish.yml).
     pluginVerification {
         // Fail only on genuine breakage — including INTERNAL_API_USAGES, the class of problem
         // that slipped into 0.1.2. Plain deprecated / scheduled-for-removal usages are reported

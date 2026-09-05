@@ -1,28 +1,34 @@
 name: Publish to JetBrains Marketplace
 
-# Push to main/master → publish the plugin, but only when the version in build.gradle.kts
-# is new (guarded by a git tag). Code-only pushes that don't bump the version are skipped,
-# so we never try to re-upload an existing version (Marketplace rejects duplicates).
-# To cut a release: bump `version = "x.y.z"` in build.gradle.kts (+ update <change-notes>),
-# commit, and push to main.
+# Publishing is a deliberate act, decoupled from merging: pushing a `v*` tag (or running this
+# workflow manually) publishes. Merging to main ships nothing, so pull requests — including
+# ones from outside contributors — can be reviewed and merged without releasing to every user.
+# Mechanical checks on merge live in ci.yml.
+#
+# To cut a release:
+#   1. bump `version = "x.y.z"` in build.gradle.kts (+ update <change-notes> in plugin.xml)
+#   2. merge to main
+#   3. git tag vx.y.z && git push origin vx.y.z
+#
+# The Marketplace rejects duplicate versions, so a version can only be published once —
+# re-tagging an already-published version fails loudly at the upload step.
 on:
   push:
-    branches: [main, master]
+    tags: ['v*']
   workflow_dispatch: {}
 
 concurrency:
   group: publish-${{ github.ref }}
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
   publish:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write        # needed to push the version tag
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0       # need tags to know what's already been published
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -39,34 +45,26 @@ jobs:
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           echo "Plugin version: $VERSION"
 
-      - name: Skip if this version was already published
-        id: guard
+      # A tag that disagrees with build.gradle.kts would publish something other than what the
+      # tag names. Refuse rather than guess. (Skipped on manual runs, which publish whatever
+      # version is on the chosen ref.)
+      - name: Check the tag matches build.gradle.kts
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
-          if git rev-parse "v${{ steps.ver.outputs.version }}" >/dev/null 2>&1; then
-            echo "new=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Tag v${{ steps.ver.outputs.version }} already exists — nothing new to publish."
-          else
-            echo "new=true" >> "$GITHUB_OUTPUT"
+          TAG="${GITHUB_REF#refs/tags/v}"
+          if [ "$TAG" != "${{ steps.ver.outputs.version }}" ]; then
+            echo "Tag v$TAG does not match version ${{ steps.ver.outputs.version }} in build.gradle.kts"
+            exit 1
           fi
 
       # Gate: run the JetBrains Plugin Verifier before publishing. Fails the job (and blocks
       # the publish step below) on internal-API / compatibility / structural problems — the
-      # class of issue that shipped in 0.1.2. Downloads the latest IDEA (~1.5 GB) on release
-      # runs only. failureLevel is configured in build.gradle.kts.
+      # class of issue that shipped in 0.1.2. Downloads the latest IDEA (~1.5 GB).
+      # failureLevel is configured in build.gradle.kts.
       - name: Verify plugin (pre-publish gate)
-        if: steps.guard.outputs.new == 'true'
         run: ./gradlew verifyPlugin --no-daemon --stacktrace
 
       - name: Publish plugin
-        if: steps.guard.outputs.new == 'true'
         env:
           PUBLISH_TOKEN: ${{ secrets.PUBLISH_TOKEN }}
         run: ./gradlew publishPlugin --no-daemon --stacktrace
-
-      - name: Tag the published version
-        if: steps.guard.outputs.new == 'true'
-        run: |
-          git config user.name  "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag "v${{ steps.ver.outputs.version }}"
-          git push origin "v${{ steps.ver.outputs.version }}"

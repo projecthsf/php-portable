@@ -1,0 +1,43 @@
+name: CI
+
+# Mechanical checks on every pull request and on main: does it compile, does it produce a
+# valid plugin, does the JetBrains Plugin Verifier accept it. This is what lets human review
+# focus on design and trade-offs instead of "does this even build".
+#
+# Safe on pull requests from forks: this workflow reads no secrets and requests only read
+# access, and GitHub gives fork PRs a read-only token regardless.
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'   # Kotlin 1.9 compiler is unstable on newer JDKs; pin 17 (same as publish.yml)
+          cache: gradle
+
+      # Fast failure first: compile errors surface in ~a minute, before the Verifier's
+      # ~1.5 GB IDE download.
+      - name: Build plugin
+        run: ./gradlew buildPlugin --no-daemon --stacktrace
+
+      # Same gate the publish workflow runs, moved earlier so contributors see it on the PR
+      # instead of the maintainer discovering it at release time. failureLevel is configured
+      # in build.gradle.kts.
+      - name: Verify plugin
+        run: ./gradlew verifyPlugin --no-daemon --stacktrace
